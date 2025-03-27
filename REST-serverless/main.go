@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// REFER: https://github.com/awslabs/aws-lambda-go-api-proxy
+
 var ginLambda *ginadapter.GinLambda
 
 func init() {
 	// stdout and stderr are sent to AWS CloudWatch Logs
 	log.Printf("Gin cold start")
 	r := gin.Default()
+	r.Use(gin.Logger())
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
