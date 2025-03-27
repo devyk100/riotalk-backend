@@ -3,6 +3,7 @@ package main
 import (
 	"REST-serverless/db"
 	"REST-serverless/middleware"
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -31,10 +32,21 @@ func main() {
 	r.Use(gin.Logger())
 	err := godotenv.Load(".env")
 	if err != nil {
-		panic("Error loading .env file")
+		fmt.Println("Error loading .env file", err.Error())
 	}
+
 	// all routes after this use DB, so initialisation is needed
+	err = db.InitDb(context.Background())
+	if err != nil {
+		fmt.Println("Error initializing db", err.Error())
+		return
+	}
 	r.Use(middleware.InitDBMiddleware())
 	r.GET("/hello", Test())
-	r.Run(":8080") // Local development
+
+	err = r.Run(":8080")
+	if err != nil {
+		fmt.Println("At r.Run", err.Error())
+		return
+	}
 }
