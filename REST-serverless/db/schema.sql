@@ -7,7 +7,7 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     img TEXT,
     since TIMESTAMP DEFAULT now(),
-    desc TEXT
+    description TEXT
 );
 
 CREATE UNIQUE INDEX idx_users_username ON users(username);
@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX idx_users_name ON users(name);
 CREATE TABLE servers (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    desc TEXT,
+    description TEXT,
     since TIMESTAMP DEFAULT now(),
     img TEXT,
     banner TEXT
@@ -32,7 +32,7 @@ CREATE TABLE user_to_user_chat_mapping (
     to_user_id BIGINT,
     type message_type,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (to_user_id) REFERENCES  user(id) ON DELETE CASCADE
+    FOREIGN KEY (to_user_id) REFERENCES  users(id) ON DELETE CASCADE
 );
 
 
@@ -53,7 +53,8 @@ CREATE TABLE channels (
     id BIGSERIAL PRIMARY KEY,
     name TEXT,
     type channel_type,
-    allowed_roles user_role              e
+    allowed_roles user_role,
+    description TEXT
 );
 
 CREATE TABLE channel_to_server_mapping (
@@ -76,7 +77,7 @@ CREATE TABLE user_to_channel_chat_mapping (
 
 CREATE TABLE user_to_channel_session_mapping (
       id BIGSERIAL PRIMARY KEY,
-      user_id BIGSERIAL,
+      user_id BIGINT,
       joined_at TIMESTAMP,
       left_at TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

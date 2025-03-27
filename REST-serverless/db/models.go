@@ -5,11 +5,203 @@
 package db
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Author struct {
-	ID   int64
-	Name string
-	Bio  pgtype.Text
+type ChannelType string
+
+const (
+	ChannelTypeText         ChannelType = "text"
+	ChannelTypeVoice        ChannelType = "voice"
+	ChannelTypeStage        ChannelType = "stage"
+	ChannelTypeAnnouncement ChannelType = "announcement"
+)
+
+func (e *ChannelType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ChannelType(s)
+	case string:
+		*e = ChannelType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ChannelType: %T", src)
+	}
+	return nil
+}
+
+type NullChannelType struct {
+	ChannelType ChannelType
+	Valid       bool // Valid is true if ChannelType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullChannelType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ChannelType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ChannelType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullChannelType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ChannelType), nil
+}
+
+type MessageType string
+
+const (
+	MessageTypeImage    MessageType = "image"
+	MessageTypeVideo    MessageType = "video"
+	MessageTypeDocument MessageType = "document"
+	MessageTypeText     MessageType = "text"
+	MessageTypeLink     MessageType = "link"
+)
+
+func (e *MessageType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MessageType(s)
+	case string:
+		*e = MessageType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MessageType: %T", src)
+	}
+	return nil
+}
+
+type NullMessageType struct {
+	MessageType MessageType
+	Valid       bool // Valid is true if MessageType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMessageType) Scan(value interface{}) error {
+	if value == nil {
+		ns.MessageType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MessageType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMessageType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MessageType), nil
+}
+
+type UserRole string
+
+const (
+	UserRoleAdmin     UserRole = "admin"
+	UserRoleModerator UserRole = "moderator"
+	UserRoleMember    UserRole = "member"
+)
+
+func (e *UserRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserRole(s)
+	case string:
+		*e = UserRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
+	}
+	return nil
+}
+
+type NullUserRole struct {
+	UserRole UserRole
+	Valid    bool // Valid is true if UserRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserRole), nil
+}
+
+type Channel struct {
+	ID           int64
+	Name         pgtype.Text
+	Type         NullChannelType
+	AllowedRoles NullUserRole
+	Description  pgtype.Text
+}
+
+type ChannelToServerMapping struct {
+	ID        int64
+	ChannelID pgtype.Int8
+	ServerID  pgtype.Int8
+}
+
+type Server struct {
+	ID          int64
+	Name        string
+	Description pgtype.Text
+	Since       pgtype.Timestamp
+	Img         pgtype.Text
+	Banner      pgtype.Text
+}
+
+type ServerToUserMapping struct {
+	ID       int64
+	UserID   pgtype.Int8
+	ServerID pgtype.Int8
+	Role     NullUserRole
+}
+
+type User struct {
+	ID          int64
+	Name        string
+	Username    string
+	Email       string
+	Img         pgtype.Text
+	Since       pgtype.Timestamp
+	Description pgtype.Text
+}
+
+type UserToChannelChatMapping struct {
+	ID         int64
+	Content    pgtype.Text
+	FromUserID pgtype.Int8
+	ToUserID   pgtype.Int8
+	Type       NullMessageType
+}
+
+type UserToChannelSessionMapping struct {
+	ID       int64
+	UserID   pgtype.Int8
+	JoinedAt pgtype.Timestamp
+	LeftAt   pgtype.Timestamp
+}
+
+type UserToUserChatMapping struct {
+	ID         int64
+	Content    pgtype.Text
+	FromUserID pgtype.Int8
+	ToUserID   pgtype.Int8
+	Type       NullMessageType
 }

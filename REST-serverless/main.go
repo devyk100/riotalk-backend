@@ -1,6 +1,7 @@
 package main
 
 import (
+	"REST-serverless/db"
 	"context"
 	"log"
 
@@ -17,6 +18,7 @@ var ginLambda *ginadapter.GinLambda
 func init() {
 	// stdout and stderr are sent to AWS CloudWatch Logs
 	log.Printf("Gin cold start")
+	db.InitDb(context.Background())
 	r := gin.Default()
 	r.Use(gin.Logger())
 	r.GET("/ping", func(c *gin.Context) {
