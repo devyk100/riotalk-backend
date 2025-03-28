@@ -11,44 +11,45 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createUser = `-- name: CreateUser :one
+const createUserOrDoNothing = `-- name: CreateUserOrDoNothing :exec
 
-INSERT INTO users (
-    name, username, email, img, description
-) VALUES (
-             $1, $2, $3, $4, $5
-         )
-RETURNING id, name, username, email, img, since, description
+
+INSERT INTO users (name, username, email, img, description, provider)
+VALUES ($1, $2, $3, $4, $5, $6)
+    ON CONFLICT (email) DO NOTHING
 `
 
-type CreateUserParams struct {
+type CreateUserOrDoNothingParams struct {
 	Name        string
 	Username    string
 	Email       string
 	Img         pgtype.Text
 	Description pgtype.Text
+	Provider    AuthType
 }
 
 // -- name: ListServers :many
 // SELECT * FROM servers
 // WHERE;
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser,
+// -- name: CreateUser :one
+// INSERT INTO users (
+//
+//	name, username, email, img, description
+//
+// ) VALUES (
+//
+//	    $1, $2, $3, $4, $5
+//	)
+//
+// RETURNING *;
+func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) error {
+	_, err := q.db.Exec(ctx, createUserOrDoNothing,
 		arg.Name,
 		arg.Username,
 		arg.Email,
 		arg.Img,
 		arg.Description,
+		arg.Provider,
 	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Username,
-		&i.Email,
-		&i.Img,
-		&i.Since,
-		&i.Description,
-	)
-	return i, err
+	return err
 }

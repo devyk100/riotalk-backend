@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/joho/godotenv"
 	"time"
 )
@@ -17,16 +16,16 @@ import (
 
 func Test() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println(db.DBQueries.CreateUser(c.Request.Context(), db.CreateUserParams{
-			Name:        "Yash",
-			Username:    "Usernameseomt",
-			Email:       "yashkumar@gmail.com",
-			Img:         pgtype.Text{String: "fmoieaw"},
-			Description: pgtype.Text{String: "foinwaelkf"},
-		}))
-		c.JSON(200, gin.H{
-			"Success": "Yes dude!",
-		})
+		//fmt.Println(db.DBQueries.CreateUser(c.Request.Context(), db.CreateUserParams{
+		//	Name:        "Yash",
+		//	Username:    "Usernameseomt",
+		//	Email:       "yashkumar@gmail.com",
+		//	Img:         pgtype.Text{String: "fmoieaw"},
+		//	Description: pgtype.Text{String: "foinwaelkf"},
+		//}))
+		//c.JSON(200, gin.H{
+		//	"Success": "Yes dude!",
+		//})
 	}
 }
 
@@ -54,7 +53,7 @@ func main() {
 	}
 	r.Use(middleware.InitDBMiddleware())
 	r.GET("/hello", Test())
-	routes.AuthRouter(r)
+	routes.RoutesRouter(r)
 	err = r.Run(":8080")
 	if err != nil {
 		fmt.Println("At r.Run", err.Error())

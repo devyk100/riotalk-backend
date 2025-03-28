@@ -1,4 +1,4 @@
-package routes
+package servers_route
 
 import "github.com/gin-gonic/gin"
 
@@ -20,7 +20,7 @@ func EditServer() gin.HandlerFunc {
 	}
 }
 
-func ServerRouter(router *gin.Engine) *gin.RouterGroup {
+func ServersRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	serverRouter := router.Group("/servers")
 	serverRouter.GET("/list", ListAllServers())
 	return serverRouter

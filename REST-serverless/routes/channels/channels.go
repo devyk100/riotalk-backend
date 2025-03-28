@@ -1,4 +1,4 @@
-package routes
+package channels_route
 
 import "github.com/gin-gonic/gin"
 
@@ -26,7 +26,7 @@ func GetChannelChats() gin.HandlerFunc {
 	}
 }
 
-func ChannelRouter(router *gin.Engine) *gin.RouterGroup {
+func ChannelRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	channelRouter := router.Group("/channels")
 	channelRouter.GET("/list")
 	return channelRouter

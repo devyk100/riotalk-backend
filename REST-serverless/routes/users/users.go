@@ -1,6 +1,8 @@
-package routes
+package users_route
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 func CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -32,8 +34,7 @@ func GetUserToUserChats() gin.HandlerFunc {
 	}
 }
 
-func UsersRouter(router *gin.Engine) *gin.RouterGroup {
+func UsersRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	usersRouter := router.Group("/users")
-
 	return usersRouter
 }

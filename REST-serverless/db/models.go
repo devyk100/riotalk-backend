@@ -11,6 +11,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AuthType string
+
+const (
+	AuthTypeGoogle AuthType = "google"
+	AuthTypeEmail  AuthType = "email"
+)
+
+func (e *AuthType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AuthType(s)
+	case string:
+		*e = AuthType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AuthType: %T", src)
+	}
+	return nil
+}
+
+type NullAuthType struct {
+	AuthType AuthType
+	Valid    bool // Valid is true if AuthType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAuthType) Scan(value interface{}) error {
+	if value == nil {
+		ns.AuthType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AuthType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAuthType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AuthType), nil
+}
+
 type ChannelType string
 
 const (
@@ -181,6 +223,7 @@ type User struct {
 	Img         pgtype.Text
 	Since       pgtype.Timestamp
 	Description pgtype.Text
+	Provider    AuthType
 }
 
 type UserToChannelChatMapping struct {

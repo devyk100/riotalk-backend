@@ -1,13 +1,15 @@
-
+DROP TYPE IF EXISTS auth_type CASCADE;
+CREATE TYPE auth_type AS ENUM ('google', 'email');
 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    username VARCHAR(244) UNIQUE NOT NULL,
+    username VARCHAR(244) UNIQUE NOT     NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     img TEXT,
     since TIMESTAMP DEFAULT now(),
-    description TEXT
+    description TEXT,
+    provider auth_type NOT NULL
 );
 
 CREATE UNIQUE INDEX idx_users_username ON users(username);
@@ -23,6 +25,7 @@ CREATE TABLE servers (
     banner TEXT
 );
 
+DROP TYPE IF EXISTS message_type CASCADE;
 CREATE TYPE message_type AS ENUM ('image', 'video', 'document', 'text', 'link');
 
 CREATE TABLE user_to_user_chat_mapping (
@@ -35,7 +38,7 @@ CREATE TABLE user_to_user_chat_mapping (
     FOREIGN KEY (to_user_id) REFERENCES  users(id) ON DELETE CASCADE
 );
 
-
+DROP TYPE IF EXISTS user_role CASCADE;
 CREATE TYPE user_role AS ENUM ('admin', 'moderator', 'member');
 
 CREATE TABLE server_to_user_mapping (
@@ -47,6 +50,7 @@ CREATE TABLE server_to_user_mapping (
     FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
 );
 
+DROP TYPE IF EXISTS channel_type CASCADE;
 CREATE TYPE channel_type AS ENUM ('text', 'voice', 'stage', 'announcement');
 
 CREATE TABLE channels (
