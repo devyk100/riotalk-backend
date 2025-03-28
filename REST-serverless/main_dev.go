@@ -3,11 +3,14 @@ package main
 import (
 	"REST-serverless/db"
 	"REST-serverless/middleware"
+	"REST-serverless/routes"
 	"context"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/joho/godotenv"
+	"time"
 )
 
 // REFER: https://gin-gonic.com/docs/
@@ -30,6 +33,14 @@ func Test() gin.HandlerFunc {
 func main() {
 	r := gin.Default()
 	r.Use(gin.Logger())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // Allow frontend domain
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true, // Important: allows cookies
+		MaxAge:           12 * time.Hour,
+	}))
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Println("Error loading .env file", err.Error())
@@ -43,7 +54,7 @@ func main() {
 	}
 	r.Use(middleware.InitDBMiddleware())
 	r.GET("/hello", Test())
-
+	routes.AuthRouter(r)
 	err = r.Run(":8080")
 	if err != nil {
 		fmt.Println("At r.Run", err.Error())
