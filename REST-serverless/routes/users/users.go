@@ -1,6 +1,7 @@
 package users_route
 
 import (
+	"REST-serverless/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,5 +37,7 @@ func GetUserToUserChats() gin.HandlerFunc {
 
 func UsersRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	usersRouter := router.Group("/users")
+	// pass through the middleware
+	usersRouter.GET("/info", middleware.AuthMiddleware(), GetUserInfo())
 	return usersRouter
 }

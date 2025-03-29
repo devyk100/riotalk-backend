@@ -48,13 +48,16 @@ def drop_database():
 
         # Drop all types (includes enums)
         cur.execute("""
-            DO $$ DECLARE
+DO $$ DECLARE
                 r RECORD;
             BEGIN
-                FOR r IN (SELECT typname FROM pg_type WHERE typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')) LOOP
+                FOR r IN (SELECT typname FROM pg_type
+                          WHERE typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+                          AND typname NOT LIKE '\\_%') LOOP  -- Skip array types
                     EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
                 END LOOP;
             END $$;
+
         """)
 
         conn.commit()

@@ -2,7 +2,6 @@ package main
 
 import (
 	"REST-serverless/db"
-	"REST-serverless/middleware"
 	"REST-serverless/routes"
 	"context"
 	"fmt"
@@ -51,7 +50,7 @@ func main() {
 		fmt.Println("Error initializing db", err.Error())
 		return
 	}
-	r.Use(middleware.InitDBMiddleware())
+	//r.Use(middleware.InitDBMiddleware())
 	r.GET("/hello", Test())
 	routes.RoutesRouter(r)
 	err = r.Run(":8080")

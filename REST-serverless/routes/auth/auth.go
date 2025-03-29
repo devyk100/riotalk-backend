@@ -10,7 +10,7 @@ func AuthRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	authRouter := router.Group("/auth")
 	google.GoogleAuthRouter(authRouter)
 
-	authRouter.GET("/refresh-token/google", RefreshToken())
+	authRouter.GET("/refresh-token", RefreshToken())
 	authRouter.GET("/cookie", func(c *gin.Context) {
 		cookie, err := c.Cookie("refresh_token")
 		if err != nil {

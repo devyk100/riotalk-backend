@@ -3,6 +3,7 @@ package auth_route
 import (
 	"REST-serverless/routes/auth/google"
 	"REST-serverless/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -15,17 +16,20 @@ func RefreshToken() gin.HandlerFunc {
 	*/
 	return func(c *gin.Context) {
 		refreshToken, err := c.Cookie("refresh_token")
+		fmt.Println(refreshToken, "IS THE REFRESH TOKEN")
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "No refresh token"})
 			return
 		}
-		token, err := utils.ParseToken(refreshToken)
+		token, method, err := utils.ParseToken(refreshToken)
 		if err != nil {
-
+			fmt.Println("")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Some JWT parsing error " + err.Error()})
+			return
 		}
 
-		if token.Method == "google" {
-			google.RefreshTokenGoogle(refreshToken, c)
+		if method == "google" {
+			google.RefreshTokenGoogle(token, c)
 		} else {
 
 		}

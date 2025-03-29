@@ -13,26 +13,23 @@ var Pool *pgxpool.Pool
 var once sync.Once
 
 func InitDb(context context.Context) error {
-	once.Do(func() {
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		fmt.Errorf("DATABASE_URL is not set")
+	}
 
-		dsn := os.Getenv("DATABASE_URL")
-		if dsn == "" {
-			fmt.Errorf("DATABASE_URL is not set")
-		}
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
-		config, err := pgxpool.ParseConfig(dsn)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+	pool, err := pgxpool.NewWithConfig(context, config)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
-		pool, err := pgxpool.NewWithConfig(context, config)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-		queries := New(pool)
-		DBQueries = queries
-		Pool = pool
-	})
+	queries := New(pool)
+	DBQueries = queries
+	Pool = pool
 	return nil
 }

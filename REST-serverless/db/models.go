@@ -219,6 +219,7 @@ type User struct {
 	ID          int64
 	Name        string
 	Username    string
+	Password    pgtype.Text
 	Email       string
 	Img         pgtype.Text
 	Since       pgtype.Timestamp

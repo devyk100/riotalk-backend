@@ -4,6 +4,7 @@ import (
 	"REST-serverless/utils"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -31,7 +32,8 @@ func RefreshTokenGoogle(refreshToken string, c *gin.Context) {
 		GrantType:    "refresh_token",
 	})
 	if err != nil {
-
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unmarshal request body"})
+		return
 	}
 
 	resp, err := http.Post(GoogleTokenUrl, "application/json", bytes.NewBuffer(reqBody))
@@ -43,7 +45,8 @@ func RefreshTokenGoogle(refreshToken string, c *gin.Context) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to "})
+			return
 		}
 	}(resp.Body)
 
@@ -54,10 +57,11 @@ func RefreshTokenGoogle(refreshToken string, c *gin.Context) {
 	}
 
 	method := "google"
-	token, err := utils.CreateAccessToken(&method, &tokenResp.AccessToken)
+	token, err := utils.CreateAccessToken(method, tokenResp.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode response"})
 		return
 	}
+	fmt.Println("It reached here")
 	c.JSON(http.StatusOK, gin.H{"accessToken": token})
 }

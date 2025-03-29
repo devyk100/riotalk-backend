@@ -5,14 +5,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var SECRET_KEY = "SSOMEITG"
+var SECRET_KEY = []byte("SOMETIME")
 
-func CreateRefreshToken(method *string, refreshToken *string) string {
+func CreateRefreshToken(method string, refreshToken string) string {
 	claims := &jwt.MapClaims{
 		"token":  refreshToken,
 		"method": method,
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(SECRET_KEY)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -21,12 +21,12 @@ func CreateRefreshToken(method *string, refreshToken *string) string {
 	return signedToken
 }
 
-func CreateAccessToken(method *string, accessToken *string) (string, error) {
+func CreateAccessToken(method string, accessToken string) (string, error) {
 	claims := &jwt.MapClaims{
 		"token":  accessToken,
 		"method": method,
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(SECRET_KEY)
 	if err != nil {
 		fmt.Println(err.Error())

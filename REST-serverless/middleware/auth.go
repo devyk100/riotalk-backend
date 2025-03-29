@@ -21,13 +21,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-		_, err := utils.ParseToken(token)
+		token, method, err := utils.ParseToken(token)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - Invalid token"})
 			c.Abort()
 			return
 		}
-
+		// Do not forget that this value has to be used everywhere
+		c.Set("token", token)
+		c.Set("method", method)
 		c.Next()
 	}
 }
