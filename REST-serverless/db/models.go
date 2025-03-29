@@ -187,16 +187,19 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 
 type Channel struct {
 	ID           int64
-	Name         pgtype.Text
-	Type         NullChannelType
-	AllowedRoles NullUserRole
+	Name         string
+	Type         ChannelType
+	ServerID     int64
+	AllowedRoles UserRole
 	Description  pgtype.Text
 }
 
-type ChannelToServerMapping struct {
-	ID        int64
-	ChannelID pgtype.Int8
-	ServerID  pgtype.Int8
+type Invite struct {
+	ID       string
+	ServerID int64
+	Expiry   pgtype.Int8
+	Uses     pgtype.Int4
+	Valid    bool
 }
 
 type Server struct {
@@ -210,9 +213,9 @@ type Server struct {
 
 type ServerToUserMapping struct {
 	ID       int64
-	UserID   pgtype.Int8
-	ServerID pgtype.Int8
-	Role     NullUserRole
+	UserID   int64
+	ServerID int64
+	Role     UserRole
 }
 
 type User struct {
@@ -225,19 +228,20 @@ type User struct {
 	Since       pgtype.Timestamp
 	Description pgtype.Text
 	Provider    AuthType
+	Verified    bool
 }
 
 type UserToChannelChatMapping struct {
 	ID         int64
 	Content    pgtype.Text
-	FromUserID pgtype.Int8
-	ToUserID   pgtype.Int8
-	Type       NullMessageType
+	FromUserID int64
+	ToUserID   int64
+	Type       MessageType
 }
 
 type UserToChannelSessionMapping struct {
 	ID       int64
-	UserID   pgtype.Int8
+	UserID   int64
 	JoinedAt pgtype.Timestamp
 	LeftAt   pgtype.Timestamp
 }
@@ -245,7 +249,7 @@ type UserToChannelSessionMapping struct {
 type UserToUserChatMapping struct {
 	ID         int64
 	Content    pgtype.Text
-	FromUserID pgtype.Int8
-	ToUserID   pgtype.Int8
-	Type       NullMessageType
+	FromUserID int64
+	ToUserID   int64
+	Type       MessageType
 }

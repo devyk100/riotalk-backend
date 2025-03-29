@@ -11,21 +11,180 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createUserOrDoNothing = `-- name: CreateUserOrDoNothing :exec
+const createChannel = `-- name: CreateChannel :one
+INSERT INTO channels (name, type, server_id, allowed_roles, description)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, name, type, server_id, allowed_roles, description
+`
+
+type CreateChannelParams struct {
+	Name         string
+	Type         ChannelType
+	ServerID     int64
+	AllowedRoles UserRole
+	Description  pgtype.Text
+}
+
+func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) (Channel, error) {
+	row := q.db.QueryRow(ctx, createChannel,
+		arg.Name,
+		arg.Type,
+		arg.ServerID,
+		arg.AllowedRoles,
+		arg.Description,
+	)
+	var i Channel
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.ServerID,
+		&i.AllowedRoles,
+		&i.Description,
+	)
+	return i, err
+}
+
+const createServer = `-- name: CreateServer :one
+INSERT INTO servers (name, description, img, banner)
+VALUES ($1, $2, $3, $4) RETURNING id, name, description, since, img, banner
+`
+
+type CreateServerParams struct {
+	Name        string
+	Description pgtype.Text
+	Img         pgtype.Text
+	Banner      pgtype.Text
+}
+
+func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) (Server, error) {
+	row := q.db.QueryRow(ctx, createServer,
+		arg.Name,
+		arg.Description,
+		arg.Img,
+		arg.Banner,
+	)
+	var i Server
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Since,
+		&i.Img,
+		&i.Banner,
+	)
+	return i, err
+}
+
+const createServerAndMapping = `-- name: CreateServerAndMapping :one
+WITH inserted_server AS (
+    INSERT INTO servers (name, description, img, banner)
+    VALUES ($1, $2, $3, $4)
+        RETURNING id
+)
+INSERT INTO server_to_user_mapping (user_id, server_id, role)
+SELECT $5, id, 'admin' FROM inserted_server
+RETURNING server_id
+`
+
+type CreateServerAndMappingParams struct {
+	Name        string
+	Description pgtype.Text
+	Img         pgtype.Text
+	Banner      pgtype.Text
+	UserID      int64
+}
+
+func (q *Queries) CreateServerAndMapping(ctx context.Context, arg CreateServerAndMappingParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createServerAndMapping,
+		arg.Name,
+		arg.Description,
+		arg.Img,
+		arg.Banner,
+		arg.UserID,
+	)
+	var server_id int64
+	err := row.Scan(&server_id)
+	return server_id, err
+}
+
+const createServerInvite = `-- name: CreateServerInvite :one
+INSERT INTO invites(id, server_id, expiry, uses, valid)
+SELECT $1, $2, $3, $4, $6
+FROM server_to_user_mapping
+WHERE server_id = $2 AND user_id = $5 AND role IN ('admin', 'moderator')
+    RETURNING id, server_id, expiry, uses, valid
+`
+
+type CreateServerInviteParams struct {
+	ID       string
+	ServerID int64
+	Expiry   pgtype.Int8
+	Uses     pgtype.Int4
+	UserID   int64
+	Valid    bool
+}
+
+func (q *Queries) CreateServerInvite(ctx context.Context, arg CreateServerInviteParams) (Invite, error) {
+	row := q.db.QueryRow(ctx, createServerInvite,
+		arg.ID,
+		arg.ServerID,
+		arg.Expiry,
+		arg.Uses,
+		arg.UserID,
+		arg.Valid,
+	)
+	var i Invite
+	err := row.Scan(
+		&i.ID,
+		&i.ServerID,
+		&i.Expiry,
+		&i.Uses,
+		&i.Valid,
+	)
+	return i, err
+}
+
+const createServerToUserMapping = `-- name: CreateServerToUserMapping :one
+INSERT INTO server_to_user_mapping(user_id, server_id, role)
+VALUES ($1, $2, $3) RETURNING id, user_id, server_id, role
+`
+
+type CreateServerToUserMappingParams struct {
+	UserID   int64
+	ServerID int64
+	Role     UserRole
+}
+
+func (q *Queries) CreateServerToUserMapping(ctx context.Context, arg CreateServerToUserMappingParams) (ServerToUserMapping, error) {
+	row := q.db.QueryRow(ctx, createServerToUserMapping, arg.UserID, arg.ServerID, arg.Role)
+	var i ServerToUserMapping
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ServerID,
+		&i.Role,
+	)
+	return i, err
+}
+
+const createUserOrDoNothing = `-- name: CreateUserOrDoNothing :one
 
 
-INSERT INTO users (name, username, email, img, description, provider)
-VALUES ($1, $2, $3, $4, $5, $6)
-    ON CONFLICT (email) DO NOTHING
+INSERT INTO users (name, username, password, email, img, description, provider, verified)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (email) DO NOTHING RETURNING id, name, username, password, email, img, since, description, provider, verified
 `
 
 type CreateUserOrDoNothingParams struct {
 	Name        string
 	Username    string
+	Password    pgtype.Text
 	Email       string
 	Img         pgtype.Text
 	Description pgtype.Text
 	Provider    AuthType
+	Verified    bool
 }
 
 // -- name: ListServers :many
@@ -42,20 +201,175 @@ type CreateUserOrDoNothingParams struct {
 //	)
 //
 // RETURNING *;
-func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) error {
-	_, err := q.db.Exec(ctx, createUserOrDoNothing,
+func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUserOrDoNothing,
 		arg.Name,
 		arg.Username,
+		arg.Password,
 		arg.Email,
 		arg.Img,
 		arg.Description,
 		arg.Provider,
+		arg.Verified,
 	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.Img,
+		&i.Since,
+		&i.Description,
+		&i.Provider,
+		&i.Verified,
+	)
+	return i, err
+}
+
+const createUserOrThrow = `-- name: CreateUserOrThrow :one
+INSERT INTO users (name, username, password, email, img, description, provider, verified)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, username, password, email, img, since, description, provider, verified
+`
+
+type CreateUserOrThrowParams struct {
+	Name        string
+	Username    string
+	Password    pgtype.Text
+	Email       string
+	Img         pgtype.Text
+	Description pgtype.Text
+	Provider    AuthType
+	Verified    bool
+}
+
+func (q *Queries) CreateUserOrThrow(ctx context.Context, arg CreateUserOrThrowParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUserOrThrow,
+		arg.Name,
+		arg.Username,
+		arg.Password,
+		arg.Email,
+		arg.Img,
+		arg.Description,
+		arg.Provider,
+		arg.Verified,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.Img,
+		&i.Since,
+		&i.Description,
+		&i.Provider,
+		&i.Verified,
+	)
+	return i, err
+}
+
+const decrementInviteUses = `-- name: DecrementInviteUses :exec
+UPDATE invites
+SET uses = uses - 1
+WHERE id = $1 AND uses > 0
+`
+
+func (q *Queries) DecrementInviteUses(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, decrementInviteUses, id)
 	return err
 }
 
+const getChannelList = `-- name: GetChannelList :many
+WITH user_role_cte AS (
+    SELECT role FROM server_to_user_mapping
+    WHERE user_id = $1 AND server_id = $2
+)
+SELECT c.id, c.name, c.type, c.server_id, c.allowed_roles, c.description
+FROM channels c
+         JOIN user_role_cte u
+              ON c.server_id = $2
+WHERE c.allowed_roles IN (
+    CASE
+        WHEN u.role = 'admin' THEN ARRAY['admin', 'moderator', 'member']::user_role[]
+        WHEN u.role = 'moderator' THEN ARRAY['moderator', 'member']::user_role[]
+        WHEN u.role = 'member' THEN ARRAY['member']::user_role[]
+        END
+)
+`
+
+type GetChannelListParams struct {
+	UserID   int64
+	ServerID int64
+}
+
+func (q *Queries) GetChannelList(ctx context.Context, arg GetChannelListParams) ([]Channel, error) {
+	rows, err := q.db.Query(ctx, getChannelList, arg.UserID, arg.ServerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Channel
+	for rows.Next() {
+		var i Channel
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Type,
+			&i.ServerID,
+			&i.AllowedRoles,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPasswordFromUserNameEmail = `-- name: GetPasswordFromUserNameEmail :one
+SELECT password, id
+FROM users
+WHERE email = $1 OR username = $1
+    LIMIT 1
+`
+
+type GetPasswordFromUserNameEmailRow struct {
+	Password pgtype.Text
+	ID       int64
+}
+
+func (q *Queries) GetPasswordFromUserNameEmail(ctx context.Context, email string) (GetPasswordFromUserNameEmailRow, error) {
+	row := q.db.QueryRow(ctx, getPasswordFromUserNameEmail, email)
+	var i GetPasswordFromUserNameEmailRow
+	err := row.Scan(&i.Password, &i.ID)
+	return i, err
+}
+
+const getServerInvite = `-- name: GetServerInvite :one
+SELECT id, server_id, expiry, uses, valid FROM invites WHERE id = $1
+`
+
+func (q *Queries) GetServerInvite(ctx context.Context, id string) (Invite, error) {
+	row := q.db.QueryRow(ctx, getServerInvite, id)
+	var i Invite
+	err := row.Scan(
+		&i.ID,
+		&i.ServerID,
+		&i.Expiry,
+		&i.Uses,
+		&i.Valid,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, username, password, email, img, since, description, provider FROM users WHERE email = $1 LIMIT 1
+SELECT id, name, username, password, email, img, since, description, provider, verified FROM users WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -71,6 +385,93 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Since,
 		&i.Description,
 		&i.Provider,
+		&i.Verified,
 	)
 	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, name, username, password, email, img, since, description, provider, verified FROM users WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRow(ctx, getUserById, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.Img,
+		&i.Since,
+		&i.Description,
+		&i.Provider,
+		&i.Verified,
+	)
+	return i, err
+}
+
+const updateChannel = `-- name: UpdateChannel :exec
+UPDATE channels
+SET
+    name = COALESCE(NULLIF($3, ''), name),
+    allowed_roles = COALESCE(NULLIF($4, ''), allowed_roles),
+    description = COALESCE(NULLIF($5, ''), description)
+WHERE channels.id = $1
+  AND EXISTS (
+    SELECT 1
+    FROM server_to_user_mapping
+    WHERE server_to_user_mapping.server_id = channels.server_id
+      AND server_to_user_mapping.user_id = $2
+      AND server_to_user_mapping.role IN ('admin', 'moderator')
+)
+`
+
+type UpdateChannelParams struct {
+	ID      int64
+	UserID  int64
+	Column3 interface{}
+	Column4 interface{}
+	Column5 interface{}
+}
+
+func (q *Queries) UpdateChannel(ctx context.Context, arg UpdateChannelParams) error {
+	_, err := q.db.Exec(ctx, updateChannel,
+		arg.ID,
+		arg.UserID,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+	)
+	return err
+}
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE users
+SET
+    name = COALESCE(NULLIF($2, ''), name),
+    username = COALESCE(NULLIF($3, ''), username),
+    img = COALESCE(NULLIF($4, ''), img),
+    description = COALESCE(NULLIF($5, ''), description)
+WHERE id = $1
+`
+
+type UpdateUserParams struct {
+	ID      int64
+	Column2 interface{}
+	Column3 interface{}
+	Column4 interface{}
+	Column5 interface{}
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.Exec(ctx, updateUser,
+		arg.ID,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+	)
+	return err
 }
