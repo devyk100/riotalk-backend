@@ -40,6 +40,9 @@ CREATE TABLE user_to_user_chat_mapping (
     FOREIGN KEY (to_user_id) REFERENCES  users(id) ON DELETE CASCADE
 );
 
+CREATE UNIQUE INDEX idx_from_to_users
+    ON user_to_user_chat_mapping(from_user_id, to_user_id);
+
 DROP TYPE IF EXISTS user_role CASCADE;
 CREATE TYPE user_role AS ENUM ('admin', 'moderator', 'member');
 
@@ -67,16 +70,19 @@ CREATE TABLE channels (
 
 CREATE INDEX idx_channels_server_id ON channels(server_id);
 
-
 CREATE TABLE user_to_channel_chat_mapping (
     id BIGSERIAL PRIMARY KEY,
     content TEXT,
+    reply_of BIGSERIAL,
     from_user_id BIGINT NOT NULL,
-    to_user_id BIGINT NOT NULL,
+    channel_id BIGSERIAL NOT NULL,
     type message_type NOT NULL,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (reply_of) REFERENCES user_to_channel_chat_mapping(id) ON DELETE SET NULL,
+    FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
 );
+CREATE INDEX idx_reply_of ON user_to_channel_chat_mapping(reply_of);
+CREATE INDEX idx_channel_id ON user_to_channel_chat_mapping(channel_id);
 
 CREATE TABLE user_to_channel_session_mapping (
       id BIGSERIAL PRIMARY KEY,

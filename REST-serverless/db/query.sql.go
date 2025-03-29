@@ -169,8 +169,6 @@ func (q *Queries) CreateServerToUserMapping(ctx context.Context, arg CreateServe
 }
 
 const createUserOrDoNothing = `-- name: CreateUserOrDoNothing :one
-
-
 INSERT INTO users (name, username, password, email, img, description, provider, verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (email) DO NOTHING RETURNING id, name, username, password, email, img, since, description, provider, verified
@@ -187,20 +185,6 @@ type CreateUserOrDoNothingParams struct {
 	Verified    bool
 }
 
-// -- name: ListServers :many
-// SELECT * FROM servers
-// WHERE;
-// -- name: CreateUser :one
-// INSERT INTO users (
-//
-//	name, username, email, img, description
-//
-// ) VALUES (
-//
-//	    $1, $2, $3, $4, $5
-//	)
-//
-// RETURNING *;
 func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUserOrDoNothing,
 		arg.Name,

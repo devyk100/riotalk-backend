@@ -235,7 +235,6 @@ type UserToChannelChatMapping struct {
 	ID         int64
 	Content    pgtype.Text
 	FromUserID int64
-	ToUserID   int64
 	Type       MessageType
 }
 
