@@ -45,6 +45,48 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) (C
 	return i, err
 }
 
+const createChannelIfAuthorized = `-- name: CreateChannelIfAuthorized :one
+WITH user_role_check AS (
+    SELECT role FROM server_to_user_mapping
+    WHERE user_id = $1 AND server_id = $3
+)
+INSERT INTO channels (name, type, server_id, allowed_roles, description)
+SELECT $2, $4, $3, $5, $6
+FROM user_role_check
+WHERE role IN ('admin', 'moderator')
+    RETURNING id, name, type, server_id, allowed_roles, description
+`
+
+type CreateChannelIfAuthorizedParams struct {
+	UserID       int64
+	Name         string
+	ServerID     int64
+	Type         ChannelType
+	AllowedRoles UserRole
+	Description  pgtype.Text
+}
+
+func (q *Queries) CreateChannelIfAuthorized(ctx context.Context, arg CreateChannelIfAuthorizedParams) (Channel, error) {
+	row := q.db.QueryRow(ctx, createChannelIfAuthorized,
+		arg.UserID,
+		arg.Name,
+		arg.ServerID,
+		arg.Type,
+		arg.AllowedRoles,
+		arg.Description,
+	)
+	var i Channel
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.ServerID,
+		&i.AllowedRoles,
+		&i.Description,
+	)
+	return i, err
+}
+
 const createServer = `-- name: CreateServer :one
 INSERT INTO servers (name, description, img, banner)
 VALUES ($1, $2, $3, $4) RETURNING id, name, description, since, img, banner

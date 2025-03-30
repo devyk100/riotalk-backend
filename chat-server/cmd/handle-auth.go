@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"chat-server/state"
 	"chat-server/types"
 	"chat-server/utils"
 	"encoding/json"
@@ -25,7 +26,8 @@ func HandleWSAuth(conn *websocket.Conn) (int64, error) {
 	} else {
 		return 0, fmt.Errorf("invalid event")
 	}
-	_, method, userId, err := utils.ParseToken(ReceivedAuthMessage.Token)
+	token, method, userId, err := utils.ParseToken(ReceivedAuthMessage.Token)
+	state.AccessTokens[userId] = token
 	if err != nil {
 		return 0, err
 	}

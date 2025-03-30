@@ -39,6 +39,18 @@ INSERT INTO channels (name, type, server_id, allowed_roles, description)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
+-- name: CreateChannelIfAuthorized :one
+WITH user_role_check AS (
+    SELECT role FROM server_to_user_mapping
+    WHERE user_id = $1 AND server_id = $3
+)
+INSERT INTO channels (name, type, server_id, allowed_roles, description)
+SELECT $2, $4, $3, $5, $6
+FROM user_role_check
+WHERE role IN ('admin', 'moderator')
+    RETURNING *;
+
+
 -- name: GetChannelList :many
 WITH user_role_cte AS (
     SELECT role FROM server_to_user_mapping

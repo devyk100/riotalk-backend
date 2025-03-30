@@ -79,7 +79,7 @@ func GoogleCallback() gin.HandlerFunc {
 		// make a DB request to check if the User was available, or not
 		userData, err := db.DBQueries.CreateUserOrDoNothing(c.Request.Context(), db.CreateUserOrDoNothingParams{
 			Name:     user.Name,
-			Username: strings.Fields(user.Name)[0] + utils.RandomString(10),
+			Username: strings.Fields(user.Name)[0] + utils.RandomString(15),
 			Email:    user.Email,
 			Img: pgtype.Text{
 				String: user.Picture,
