@@ -77,9 +77,9 @@ func GoogleCallback() gin.HandlerFunc {
 
 		fmt.Println(user)
 		// make a DB request to check if the User was available, or not
-		err = db.DBQueries.CreateUserOrDoNothing(c.Request.Context(), db.CreateUserOrDoNothingParams{
+		userData, err := db.DBQueries.CreateUserOrDoNothing(c.Request.Context(), db.CreateUserOrDoNothingParams{
 			Name:     user.Name,
-			Username: user.Name + " " + utils.RandomString(10),
+			Username: strings.Fields(user.Name)[0] + utils.RandomString(10),
 			Email:    user.Email,
 			Img: pgtype.Text{
 				String: user.Picture,
@@ -90,6 +90,10 @@ func GoogleCallback() gin.HandlerFunc {
 				Valid:  false,
 			},
 			Provider: "google",
+			Verified: true,
+			Password: pgtype.Text{
+				Valid: false,
+			},
 		})
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -97,7 +101,7 @@ func GoogleCallback() gin.HandlerFunc {
 		}
 
 		method := "google"
-		token := utils.CreateRefreshToken(method, googleTokenResponse.RefreshToken)
+		token := utils.CreateRefreshToken(method, googleTokenResponse.RefreshToken, userData.ID)
 		fmt.Println(token, "is the token, generated")
 		c.SetCookie("refresh_token", token, 60*60*24, "/", "", false, true)
 		c.Redirect(http.StatusFound, "http://localhost:3000/auth-success")

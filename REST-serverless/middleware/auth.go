@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-func validateToken(token string) bool {
-	return true
-}
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("Authorization")
@@ -19,9 +15,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-		token, method, err := utils.ParseToken(token)
+		token, method, userId, err := utils.ParseToken(token)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - Invalid token"})
 			c.Abort()
@@ -30,6 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Do not forget that this value has to be used everywhere
 		c.Set("token", token)
 		c.Set("method", method)
+		c.Set("userId", userId)
 		c.Next()
 	}
 }

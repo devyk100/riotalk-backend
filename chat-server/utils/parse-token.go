@@ -12,6 +12,8 @@ type CustomTokenClaims struct {
 	jwt.RegisteredClaims
 }
 
+var SECRET_KEY = []byte("SOMETIME")
+
 func ParseToken(tokenString string) (string, string, int64, error) {
 	// Parse and validate the token
 	token, err := jwt.ParseWithClaims(tokenString, &CustomTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -31,14 +33,5 @@ func ParseToken(tokenString string) (string, string, int64, error) {
 		return "", "", -1, fmt.Errorf("invalid token")
 	}
 
-	//// Convert values safely
-	//accessToken, ok1 := claims["token"].(string)
-	//method, ok2 := claims["method"].(string)
-	//userIdFloat, ok3 := claims["userId"].(float64)
-	//
-	//if !ok1 || !ok2 || !ok3 {
-	//	return "", "", -1, fmt.Errorf("malformed token claims")
-	//}
-	//userId := int64(userIdFloat)
 	return claims.Token, claims.Method, claims.UserID, nil
 }

@@ -54,6 +54,23 @@ func GetUserInfo() gin.HandlerFunc {
 				"user_id":  User.ID,
 				"username": User.Username,
 			})
+		} else {
+			userId, exists := c.Get("userId")
+			if !exists {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - Authentication error, the userId field is missing"})
+			}
+			User, err := db.DBQueries.GetUserById(c.Request.Context(), userId.(int64))
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"name":     User.Name,
+				"email":    User.Email,
+				"img":      User.Img,
+				"user_id":  User.ID,
+				"username": User.Username,
+			})
 		}
 	}
 }

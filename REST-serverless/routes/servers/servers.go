@@ -1,27 +1,16 @@
 package servers_route
 
-import "github.com/gin-gonic/gin"
-
-func ListAllServers() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
-
-func CreateServer() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
-
-func EditServer() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
+import (
+	"REST-serverless/middleware"
+	"github.com/gin-gonic/gin"
+)
 
 func ServersRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	serverRouter := router.Group("/servers")
-	serverRouter.GET("/list", ListAllServers())
+	serverRouter.GET("/list", middleware.AuthMiddleware(), ListAllServers())
+	serverRouter.POST("/create", middleware.AuthMiddleware(), CreateServer())
+	serverRouter.GET("/accept-invite", middleware.AuthMiddleware(), AcceptInvite())
+	serverRouter.POST("/create-invite", middleware.AuthMiddleware(), CreateInvite())
+	serverRouter.PUT("/change-role", middleware.AuthMiddleware(), ChangeUserRole())
 	return serverRouter
 }

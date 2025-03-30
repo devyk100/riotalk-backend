@@ -352,6 +352,56 @@ func (q *Queries) GetServerInvite(ctx context.Context, id string) (Invite, error
 	return i, err
 }
 
+const getServersList = `-- name: GetServersList :many
+SELECT s.id, name, description, since, img, banner, m.id, user_id, server_id, role FROM servers s
+JOIN server_to_user_mapping m ON s.id = m.server_id
+WHERE m.user_id = $1
+`
+
+type GetServersListRow struct {
+	ID          int64
+	Name        string
+	Description pgtype.Text
+	Since       pgtype.Timestamp
+	Img         pgtype.Text
+	Banner      pgtype.Text
+	ID_2        int64
+	UserID      int64
+	ServerID    int64
+	Role        UserRole
+}
+
+func (q *Queries) GetServersList(ctx context.Context, userID int64) ([]GetServersListRow, error) {
+	rows, err := q.db.Query(ctx, getServersList, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetServersListRow
+	for rows.Next() {
+		var i GetServersListRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Since,
+			&i.Img,
+			&i.Banner,
+			&i.ID_2,
+			&i.UserID,
+			&i.ServerID,
+			&i.Role,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, name, username, password, email, img, since, description, provider, verified FROM users WHERE email = $1 LIMIT 1
 `
@@ -457,5 +507,30 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Column4,
 		arg.Column5,
 	)
+	return err
+}
+
+const updateUserRole = `-- name: UpdateUserRole :exec
+UPDATE server_to_user_mapping AS target
+SET role = $3
+    FROM server_to_user_mapping AS initiator
+WHERE target.user_id = $2
+  AND target.server_id = initiator.server_id
+  AND initiator.user_id = $1
+  AND (
+    (initiator.role = 'admin' AND $3 IN ('admin', 'moderator', 'member'))
+   OR
+    (initiator.role = 'moderator' AND $3 IN ('moderator', 'member'))
+    )
+`
+
+type UpdateUserRoleParams struct {
+	UserID   int64
+	UserID_2 int64
+	Role     UserRole
+}
+
+func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
+	_, err := q.db.Exec(ctx, updateUserRole, arg.UserID, arg.UserID_2, arg.Role)
 	return err
 }

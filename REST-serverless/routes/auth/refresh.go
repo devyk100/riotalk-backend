@@ -1,6 +1,7 @@
 package auth_route
 
 import (
+	"REST-serverless/routes/auth/email"
 	"REST-serverless/routes/auth/google"
 	"REST-serverless/utils"
 	"fmt"
@@ -21,17 +22,17 @@ func RefreshToken() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "No refresh token"})
 			return
 		}
-		token, method, err := utils.ParseToken(refreshToken)
+		token, method, userId, err := utils.ParseToken(refreshToken)
 		if err != nil {
-			fmt.Println("")
+			fmt.Println("The token parsing fails")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Some JWT parsing error " + err.Error()})
 			return
 		}
 
 		if method == "google" {
-			google.RefreshTokenGoogle(token, c)
+			google.RefreshTokenGoogle(token, userId, c)
 		} else {
-
+			email.RefreshTokenEmail(token, userId, c)
 		}
 
 	}

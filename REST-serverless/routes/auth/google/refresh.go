@@ -24,7 +24,7 @@ type RefreshTokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-func RefreshTokenGoogle(refreshToken string, c *gin.Context) {
+func RefreshTokenGoogle(refreshToken string, userId int64, c *gin.Context) {
 	reqBody, err := json.Marshal(RefreshTokenGoogleRequest{
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ClientSecret: os.Getenv("CLIENT_SECRET"),
@@ -57,9 +57,9 @@ func RefreshTokenGoogle(refreshToken string, c *gin.Context) {
 	}
 
 	method := "google"
-	token, err := utils.CreateAccessToken(method, tokenResp.AccessToken)
+	token, err := utils.CreateAccessToken(method, tokenResp.AccessToken, userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode response"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to make access token"})
 		return
 	}
 	fmt.Println("It reached here")

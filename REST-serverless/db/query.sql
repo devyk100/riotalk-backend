@@ -101,3 +101,20 @@ WHERE channels.id = $1
       AND server_to_user_mapping.role IN ('admin', 'moderator')
 );
 
+-- name: GetServersList :many
+SELECT * FROM servers s
+JOIN server_to_user_mapping m ON s.id = m.server_id
+WHERE m.user_id = $1;
+
+-- name: UpdateUserRole :exec
+UPDATE server_to_user_mapping AS target
+SET role = $3
+    FROM server_to_user_mapping AS initiator
+WHERE target.user_id = $2
+  AND target.server_id = initiator.server_id
+  AND initiator.user_id = $1
+  AND (
+    (initiator.role = 'admin' AND $3 IN ('admin', 'moderator', 'member'))
+   OR
+    (initiator.role = 'moderator' AND $3 IN ('moderator', 'member'))
+    );

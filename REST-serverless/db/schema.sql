@@ -54,6 +54,8 @@ CREATE TABLE server_to_user_mapping (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_user_server_id ON server_to_user_mapping(server_id, user_id); -- for search of roles and all, known the server
+CREATE INDEX idx_server_id_of_mapping ON server_to_user_mapping(server_id); -- For simple seach of servers for a user
 
 DROP TYPE IF EXISTS channel_type CASCADE;
 CREATE TYPE channel_type AS ENUM ('text', 'voice', 'stage', 'announcement');

@@ -234,7 +234,9 @@ type User struct {
 type UserToChannelChatMapping struct {
 	ID         int64
 	Content    pgtype.Text
+	ReplyOf    pgtype.Int8
 	FromUserID int64
+	ChannelID  int64
 	Type       MessageType
 }
 

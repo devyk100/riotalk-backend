@@ -1,24 +1,9 @@
 package channels_route
 
-import "github.com/gin-gonic/gin"
-
-func ListAllChannels() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
-
-func CreateChannel() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
-
-func EditChannel() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-	}
-}
+import (
+	"REST-serverless/middleware"
+	"github.com/gin-gonic/gin"
+)
 
 func GetChannelChats() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -28,6 +13,8 @@ func GetChannelChats() gin.HandlerFunc {
 
 func ChannelRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	channelRouter := router.Group("/channels")
-	channelRouter.GET("/list")
+	channelRouter.GET("/list", middleware.AuthMiddleware(), ListAllChannels())
+	channelRouter.POST("/create", middleware.AuthMiddleware(), CreateChannel())
+	channelRouter.PUT("/edit", middleware.AuthMiddleware(), EditChannel())
 	return channelRouter
 }

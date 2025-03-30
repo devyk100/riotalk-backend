@@ -51,7 +51,6 @@ func main() {
 		return
 	}
 	//r.Use(middleware.InitDBMiddleware())
-	r.GET("/hello", Test())
 	routes.RoutesRouter(r)
 	err = r.Run(":8080")
 	if err != nil {
