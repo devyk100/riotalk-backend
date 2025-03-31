@@ -3,7 +3,7 @@ package main
 import (
 	"chat-server/cmd"
 	"chat-server/redis"
-	"chat-server/state"
+	"chat-server/sqs"
 	"chat-server/types"
 	"context"
 	"fmt"
@@ -30,11 +30,10 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	}()
 	userId, err := cmd.HandleWSAuth(conn)
-	client := types.Client{
+	Client := &types.Client{
 		Conn: conn,
-		Mu:   sync.Mutex{},
+		Mu:   &sync.Mutex{},
 	}
-	state.Clients[userId] = &client
 	if err != nil {
 		fmt.Println("Error handling WSAuth:", err)
 		return
@@ -42,13 +41,16 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	// DO NOT EXIT THIS FUNCTION, THE OTHER CREATED CONN'S, AND OTHER'S REFERENCES WOULD BE LOST, AND DEREFERENCING ERRORS WILL OCCUR
 	fmt.Println("New client connected!")
-	go cmd.MainEventLoop(&client, userId)
-	cmd.MainReadLoop(&client, userId)
+	go cmd.MainEventLoop(Client, userId)
+	cmd.MainReadLoop(Client, userId)
 }
 
 func main() {
 	http.HandleFunc("/ws", handleConnections)
 	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Println("Error loading .env file", err.Error())
+	}
 	port := "8090"
 	fmt.Println("WebSocket server started on : " + port)
 	err = redis.InitRedisClient(context.Background())
@@ -56,6 +58,7 @@ func main() {
 		fmt.Println("Error initializing Redis client:", err)
 		return
 	}
+	sqs.InitSQSClient()
 	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		fmt.Println("Server failed to start:", err)

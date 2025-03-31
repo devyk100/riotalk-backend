@@ -1,10 +1,5 @@
 package types
 
-import (
-	"github.com/gorilla/websocket"
-	"sync"
-)
-
 type Event struct {
 	Event          string `json:"event"`            // chat, auth, history
 	Type           string `json:"type"`             // server, user
@@ -20,15 +15,5 @@ type Event struct {
 	Content        string `json:"content"`          //
 	TimeAt         int64  `json:"time_at"`          //
 	MessageType    string `json:"message_type"`     //
-	ReplyOf        *int64 `json:"reply_of"`         // references another chat id in same list
-}
-type Client struct {
-	Conn *websocket.Conn
-	Mu   *sync.Mutex // Protects writes
-}
-
-func (c Client) SafeWriteMessage(messageType int, message []byte) error {
-	c.Mu.Lock()
-	defer c.Mu.Unlock()
-	return c.Conn.WriteMessage(messageType, message)
+	ReplyOf        int64  `json:"reply_of"`         // references another chat id in same list
 }

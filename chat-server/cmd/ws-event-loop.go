@@ -2,37 +2,36 @@ package cmd
 
 import (
 	"chat-server/redis"
-	"chat-server/state"
 	"chat-server/types"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 )
 
-func TopicEventHandlerCallback(val string, userId int64) {
+func TopicEventHandlerCallback(Client *types.Client, val string, userId int64) error {
+
 	var event types.Event
 	err := json.Unmarshal([]byte(val), &event)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return err
 	}
 	switch event.Event {
 	case "chat":
-		if state.Clients[userId] == nil {
-			return
+		if event.FromID == userId {
+			return errors.New("user already in chat")
 		}
-		if event.From == userId {
-			return
-		}
-		err := state.Clients[userId].SafeWriteMessage(websocket.TextMessage, []byte(val))
+		err := Client.SafeWriteMessage(websocket.TextMessage, []byte(val))
 		if err != nil {
 			fmt.Println(err.Error())
-			return
+			return err
 		}
 	default:
 		fmt.Println(event.Event, "IS AN INVALID EVENT")
 	}
+	return nil
 }
 
 func MainEventLoop(client *types.Client, userId int64) {
@@ -62,6 +61,12 @@ func MainEventLoop(client *types.Client, userId int64) {
 	sub := redis.RedisClient.Subscribe(context.Background(), topicKeyList...)
 	ch := sub.Channel()
 	for msg := range ch {
-		TopicEventHandlerCallback(msg.Payload, userId)
+		err := TopicEventHandlerCallback(client, msg.Payload, userId)
+		// This is important, when the websocket closes, or so, you must
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 	}
+	fmt.Println("Exiting the ws event loop")
 }
