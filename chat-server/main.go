@@ -10,11 +10,12 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"net/http"
+	"sync"
 )
 
 var Upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Allow all connections (Change this in production)
+		return true // (Change this in production)
 	},
 }
 
@@ -24,10 +25,16 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error upgrading to WebSocket:", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+
+	}()
 	userId, err := cmd.HandleWSAuth(conn)
-	state.Clients[userId] = conn
-	state.Events[userId] = make(chan *types.Event)
+	client := types.Client{
+		Conn: conn,
+		Mu:   sync.Mutex{},
+	}
+	state.Clients[userId] = &client
 	if err != nil {
 		fmt.Println("Error handling WSAuth:", err)
 		return
@@ -35,12 +42,11 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 	// DO NOT EXIT THIS FUNCTION, THE OTHER CREATED CONN'S, AND OTHER'S REFERENCES WOULD BE LOST, AND DEREFERENCING ERRORS WILL OCCUR
 	fmt.Println("New client connected!")
-	go cmd.MainWriteLoop(conn, userId)
-	cmd.MainReadLoop(conn, userId)
+	go cmd.MainEventLoop(&client, userId)
+	cmd.MainReadLoop(&client, userId)
 }
 
 func main() {
-	// Setup HTTP server
 	http.HandleFunc("/ws", handleConnections)
 	err := godotenv.Load(".env")
 	port := "8090"

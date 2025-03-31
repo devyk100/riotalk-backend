@@ -26,6 +26,7 @@ func EmailLogin() gin.HandlerFunc {
 			return
 		}
 		user, err := db.DBQueries.GetPasswordFromUserNameEmail(c.Request.Context(), reqPayload.Email)
+		fmt.Println("user", user)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

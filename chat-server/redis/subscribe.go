@@ -27,20 +27,14 @@ func Ticker(ctx context.Context, sub *redis.PubSub, channel string) {
 
 	}
 }
-func Subscribe(ctx context.Context, channel string, callback func(string)) {
-	active, err := IsTopicActive(ctx, channel)
-	if err != nil {
-		fmt.Println(err.Error())
+func Subscribe(ctx context.Context, userId int64, channels []string, callback func(string, int64)) {
+	if RedisClient == nil {
 		return
 	}
-	if RedisClient == nil || !active {
-		return
-	}
-	sub := RedisClient.Subscribe(ctx, channel)
+	sub := RedisClient.Subscribe(ctx, channels...)
 	ch := sub.Channel()
-	go Ticker(ctx, sub, channel)
-	fmt.Println("Subscribed to channel:", channel)
+	fmt.Println("Subscribed to channel:", channels)
 	for msg := range ch {
-		callback(msg.Payload)
+		callback(msg.Payload, userId)
 	}
 }

@@ -1,40 +1,55 @@
 package cmd
 
 import (
-	"chat-server/state"
+	"chat-server/redis"
 	"chat-server/types"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 )
 
-func MainReadLoop(conn *websocket.Conn, userId int64) {
+func ClientEventHandler(ctx context.Context, msg []byte, userId int64) {
+	var ReceivedMessage types.Event
+	err := json.Unmarshal(msg, &ReceivedMessage)
+	if err != nil {
+		fmt.Println("Error unmarshalling message:", err)
+		return
+	}
+	switch ReceivedMessage.Event {
+	case "chat":
+		switch ReceivedMessage.Type {
+		case "server":
+			err := redis.Publish(ctx, redis.ServerKey(ReceivedMessage.To), string(msg))
+			if err != nil {
+				fmt.Println("Error publishing:", err)
+				return
+			}
+		case "user":
+			err := redis.Publish(ctx, redis.UserKey(ReceivedMessage.To), string(msg))
+			if err != nil {
+				fmt.Println("Error publishing:", err)
+				return
+			}
+		default:
+			fmt.Println(ReceivedMessage.Event, "IS AN INVALID EVENT")
+		}
+	case "close":
+	default:
+		fmt.Println(ReceivedMessage.Event, "IS AN INVALID EVENT")
+	}
+}
+
+func MainReadLoop(client *types.Client, userId int64) {
+	ctx := context.Background()
 	defer func() {
-		conn.Close()
-		close(state.Events[userId])
+		client.Conn.Close()
 	}()
 	for {
-		_, msg, err := conn.ReadMessage()
+		_, msg, err := client.Conn.ReadMessage() // Blocking
 		if err != nil {
 			fmt.Println("Client disconnected")
 			break
 		}
-		var ReceivedMesssage types.Event
-		err = json.Unmarshal(msg, &ReceivedMesssage)
-		if err != nil {
-			fmt.Println("Error unmarshalling message:", err)
-			continue
-		}
-
-		switch ReceivedMesssage.Event {
-		case "chat":
-			// appropriately handle channel, and user mesasages differently
-			// publish them to the pubsub respective channel
-			// If the pubsub channel is not active, make it active
-		case "auth":
-		case "close":
-			// exit and close the connection
-		default:
-		}
+		ClientEventHandler(ctx, msg, userId)
 	}
 }

@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"chat-server/redis"
 	"chat-server/state"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,13 +14,14 @@ type ServerData struct {
 	Description string `json:"Description"`
 }
 
-func InitSubscribers(userID int64) ([]ServerData, error) {
+func FetchServerList(userID int64) ([]ServerData, error) {
 	url := "http://localhost:8080/servers/list"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("MAKING A REQUEST TO ", url, "with", state.AccessTokens[userID])
 	req.Header.Set("Authorization", "Bearer "+state.AccessTokens[userID])
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
@@ -44,9 +43,6 @@ func InitSubscribers(userID int64) ([]ServerData, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, server := range servers {
-		go redis.Subscribe(context.Background(), redis.ServerKey(server.ID), func(s string) {
 
-		})
-	}
+	return servers, nil
 }

@@ -26,11 +26,11 @@ func HandleWSAuth(conn *websocket.Conn) (int64, error) {
 	} else {
 		return 0, fmt.Errorf("invalid event")
 	}
-	token, method, userId, err := utils.ParseToken(ReceivedAuthMessage.Token)
-	state.AccessTokens[userId] = token
+	_, method, userId, err := utils.ParseToken(ReceivedAuthMessage.Token)
+	state.AccessTokens[userId] = ReceivedAuthMessage.Token
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println("Was authorized using", method)
+	fmt.Println("Was authorized using", method, "user", userId)
 	return userId, nil
 }

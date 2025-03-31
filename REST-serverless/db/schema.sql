@@ -52,7 +52,8 @@ CREATE TABLE server_to_user_mapping (
     server_id BIGINT NOT NULL,
     role user_role NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
+    FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE,
+    UNIQUE (user_id, server_id)
 );
 CREATE INDEX idx_user_server_id ON server_to_user_mapping(server_id, user_id); -- for search of roles and all, known the server
 CREATE INDEX idx_server_id_of_mapping ON server_to_user_mapping(server_id); -- For simple seach of servers for a user
