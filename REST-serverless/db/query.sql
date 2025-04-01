@@ -1,7 +1,15 @@
 -- name: CreateUserOrDoNothing :one
+WITH inserted AS (
 INSERT INTO users (name, username, password, email, img, description, provider, verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    ON CONFLICT (email) DO NOTHING RETURNING *;
+ON CONFLICT (email) DO NOTHING
+    RETURNING *
+    )
+SELECT * FROM inserted
+UNION ALL
+SELECT * FROM users WHERE email = $4
+    LIMIT 1;
+
 
 -- name: CreateUserOrThrow :one
 INSERT INTO users (name, username, password, email, img, description, provider, verified)
@@ -50,7 +58,6 @@ FROM user_role_check
 WHERE role IN ('admin', 'moderator')
     RETURNING *;
 
-
 -- name: GetChannelList :many
 WITH user_role_cte AS (
     SELECT role FROM server_to_user_mapping
@@ -58,15 +65,16 @@ WITH user_role_cte AS (
 )
 SELECT c.*
 FROM channels c
-         JOIN user_role_cte u
-              ON c.server_id = $2
-WHERE c.allowed_roles IN (
+         JOIN user_role_cte u ON c.server_id = $2
+WHERE c.allowed_roles = ANY(
     CASE
         WHEN u.role = 'admin' THEN ARRAY['admin', 'moderator', 'member']::user_role[]
         WHEN u.role = 'moderator' THEN ARRAY['moderator', 'member']::user_role[]
         WHEN u.role = 'member' THEN ARRAY['member']::user_role[]
         END
-);
+    );
+
+
 
 -- name: CreateServerInvite :one
 INSERT INTO invites(id, server_id, expiry, uses, valid)

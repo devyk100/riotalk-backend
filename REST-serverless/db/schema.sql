@@ -16,7 +16,6 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX idx_users_username ON users(username);
 
-CREATE UNIQUE INDEX idx_users_name ON users(name);
 
 CREATE TABLE servers (
     id BIGSERIAL PRIMARY KEY,

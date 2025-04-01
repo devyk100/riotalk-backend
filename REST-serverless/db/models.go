@@ -238,6 +238,7 @@ type UserToChannelChatMapping struct {
 	FromUserID int64
 	ChannelID  int64
 	Type       MessageType
+	TimeAt     int64
 }
 
 type UserToChannelSessionMapping struct {
@@ -253,4 +254,6 @@ type UserToUserChatMapping struct {
 	FromUserID int64
 	ToUserID   int64
 	Type       MessageType
+	TimeAt     int64
+	ReplyOf    pgtype.Int8
 }

@@ -211,9 +211,16 @@ func (q *Queries) CreateServerToUserMapping(ctx context.Context, arg CreateServe
 }
 
 const createUserOrDoNothing = `-- name: CreateUserOrDoNothing :one
+WITH inserted AS (
 INSERT INTO users (name, username, password, email, img, description, provider, verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    ON CONFLICT (email) DO NOTHING RETURNING id, name, username, password, email, img, since, description, provider, verified
+ON CONFLICT (email) DO NOTHING
+    RETURNING id, name, username, password, email, img, since, description, provider, verified
+    )
+SELECT id, name, username, password, email, img, since, description, provider, verified FROM inserted
+UNION ALL
+SELECT id, name, username, password, email, img, since, description, provider, verified FROM users WHERE email = $4
+    LIMIT 1
 `
 
 type CreateUserOrDoNothingParams struct {
@@ -227,7 +234,20 @@ type CreateUserOrDoNothingParams struct {
 	Verified    bool
 }
 
-func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) (User, error) {
+type CreateUserOrDoNothingRow struct {
+	ID          int64
+	Name        string
+	Username    string
+	Password    pgtype.Text
+	Email       string
+	Img         pgtype.Text
+	Since       pgtype.Timestamp
+	Description pgtype.Text
+	Provider    AuthType
+	Verified    bool
+}
+
+func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoNothingParams) (CreateUserOrDoNothingRow, error) {
 	row := q.db.QueryRow(ctx, createUserOrDoNothing,
 		arg.Name,
 		arg.Username,
@@ -238,7 +258,7 @@ func (q *Queries) CreateUserOrDoNothing(ctx context.Context, arg CreateUserOrDoN
 		arg.Provider,
 		arg.Verified,
 	)
-	var i User
+	var i CreateUserOrDoNothingRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -315,15 +335,14 @@ WITH user_role_cte AS (
 )
 SELECT c.id, c.name, c.type, c.server_id, c.allowed_roles, c.description
 FROM channels c
-         JOIN user_role_cte u
-              ON c.server_id = $2
-WHERE c.allowed_roles IN (
+         JOIN user_role_cte u ON c.server_id = $2
+WHERE c.allowed_roles = ANY(
     CASE
         WHEN u.role = 'admin' THEN ARRAY['admin', 'moderator', 'member']::user_role[]
         WHEN u.role = 'moderator' THEN ARRAY['moderator', 'member']::user_role[]
         WHEN u.role = 'member' THEN ARRAY['member']::user_role[]
         END
-)
+    )
 `
 
 type GetChannelListParams struct {

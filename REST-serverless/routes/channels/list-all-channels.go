@@ -9,7 +9,7 @@ import (
 
 func ListAllChannels() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		server_id := c.Param("server_id")
+		server_id := c.Query("server_id")
 		//channelType := c.Param("type") --> ADD THIS FILTER IN THE FUTURE
 		userId, exists := c.Get("userId")
 		if !exists {
