@@ -26,7 +26,7 @@ func ClientEventHandler(client *types.Client, ctx context.Context, msg []byte, u
 				fmt.Println("Error publishing:", err)
 				return
 			}
-			redis.PushToRecentMessages(ctx, redis.RecentMessageServerKey(ReceivedMessage.To), string(msg))
+			redis.PushToRecentMessages(ctx, redis.RecentMessageServerKey(ReceivedMessage.To, ReceivedMessage.ChannelId), string(msg))
 			err = sqs.SendMessage(string(msg), sqs.MESSAGE_GROUP_SERVER)
 			if err != nil {
 				fmt.Println("Error sending SQS message:", err)
@@ -51,7 +51,7 @@ func ClientEventHandler(client *types.Client, ctx context.Context, msg []byte, u
 		var Key string
 		switch ReceivedMessage.Type {
 		case "server":
-			Key = redis.RecentMessageServerKey(ReceivedMessage.Of)
+			Key = redis.RecentMessageServerKey(ReceivedMessage.Of, ReceivedMessage.ChannelId)
 		case "user":
 			Key = redis.RecentMessageUserKey(ReceivedMessage.Of, userId)
 		default:
