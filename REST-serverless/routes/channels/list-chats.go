@@ -1,11 +1,11 @@
 package channels_route
 
 import (
-	"REST-serverless/redis"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/redis"
 	"strconv"
 )
 

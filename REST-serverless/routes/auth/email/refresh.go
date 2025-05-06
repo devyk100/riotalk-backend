@@ -1,10 +1,10 @@
 package email
 
 import (
-	"REST-serverless/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/utils"
 )
 
 func RefreshTokenEmail(refreshToken string, userId int64, c *gin.Context) {

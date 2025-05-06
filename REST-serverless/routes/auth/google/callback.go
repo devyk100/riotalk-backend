@@ -1,8 +1,6 @@
 package google
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"shared/db"
+	"shared/utils"
 	"strings"
 )
 

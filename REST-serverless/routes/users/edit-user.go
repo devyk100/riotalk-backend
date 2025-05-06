@@ -1,10 +1,10 @@
 package users_route
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/db"
+	"shared/utils"
 )
 
 type EditUserRequest struct {

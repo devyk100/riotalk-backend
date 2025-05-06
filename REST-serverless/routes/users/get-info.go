@@ -1,11 +1,11 @@
 package users_route
 
 import (
-	"REST-serverless/db"
 	"REST-serverless/routes/auth/google"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/db"
 )
 
 type UserInfo struct {

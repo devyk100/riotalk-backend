@@ -1,12 +1,12 @@
 package servers_route
 
 import (
-	db "REST-serverless/db"
-	"REST-serverless/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
+	db "shared/db"
+	"shared/utils"
 	"time"
 )
 

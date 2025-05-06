@@ -10,7 +10,6 @@ UNION ALL
 SELECT * FROM users WHERE email = $4
     LIMIT 1;
 
-
 -- name: CreateUserOrThrow :one
 INSERT INTO users (name, username, password, email, img, description, provider, verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
@@ -40,7 +39,6 @@ SELECT password, id
 FROM users
 WHERE email = $1 OR username = $1
     LIMIT 1;
-
 
 -- name: CreateChannel :one
 INSERT INTO channels (name, type, server_id, allowed_roles, description)
@@ -81,10 +79,8 @@ FROM server_to_user_mapping
 WHERE server_id = $2 AND user_id = $5 AND role IN ('admin', 'moderator')
     RETURNING *;
 
-
 -- name: GetServerInvite :one
 SELECT * FROM invites WHERE id = $1;
-
 
 -- name: DecrementInviteUses :exec
 UPDATE invites
@@ -136,3 +132,52 @@ WHERE target.user_id = $2
    OR
     (initiator.role = 'moderator' AND $3 IN ('moderator', 'member'))
     );
+
+
+
+
+
+
+
+
+-- name: BatchInsertUserToChannelChat :exec
+INSERT INTO user_to_channel_chat_mapping (content, reply_of, from_user_id, channel_id, type, time_at)
+SELECT
+    u_content,
+    u_reply_of,
+    u_from_user_id,
+    u_channel_id,
+    u_type::message_type,
+        u_time_at
+FROM unnest(@content::TEXT[]) WITH ORDINALITY AS t1(u_content, ord),
+     unnest(ARRAY(SELECT CASE WHEN x = 0 THEN NULL ELSE x END FROM unnest(@reply_of::BIGINT[]) AS x)) WITH ORDINALITY AS t2(u_reply_of, ord),
+     unnest(@from_user_id::BIGINT[]) WITH ORDINALITY AS t3(u_from_user_id, ord),
+     unnest(@channel_id::BIGINT[]) WITH ORDINALITY AS t4(u_channel_id, ord),
+     unnest(@type::TEXT[]) WITH ORDINALITY AS t5(u_type, ord),
+     unnest(@time_at::BIGINT[]) WITH ORDINALITY AS t6(u_time_at, ord)
+WHERE t1.ord = t2.ord
+  AND t2.ord = t3.ord
+  AND t3.ord = t4.ord
+  AND t4.ord = t5.ord
+  AND t5.ord = t6.ord;
+
+-- name: BatchInsertUserToUserChat :exec
+INSERT INTO user_to_user_chat_mapping (content, from_user_id, to_user_id, reply_of, type, time_at)
+SELECT
+    u_content,
+    u_from_user_id,
+    u_to_user_id,
+    u_reply_of,
+    u_type::message_type,
+        u_time_at
+FROM unnest(@content::TEXT[]) WITH ORDINALITY AS t1(u_content, ord),
+     unnest(@from_user_id::BIGINT[]) WITH ORDINALITY AS t2(u_from_user_id, ord),
+     unnest(@to_user_id::BIGINT[]) WITH ORDINALITY AS t3(u_to_user_id, ord),
+     unnest(ARRAY(SELECT CASE WHEN x = 0 THEN NULL ELSE x END FROM unnest(@reply_of::BIGINT[]) AS x)) WITH ORDINALITY AS t4(u_reply_of, ord),
+     unnest(@type::TEXT[]) WITH ORDINALITY AS t5(u_type, ord),
+     unnest(@time_at::BIGINT[]) WITH ORDINALITY AS t6(u_time_at, ord)
+WHERE t1.ord = t2.ord
+  AND t2.ord = t3.ord
+  AND t3.ord = t4.ord
+  AND t4.ord = t5.ord
+  AND t5.ord = t6.ord;

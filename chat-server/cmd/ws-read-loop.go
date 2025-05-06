@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"chat-server/redis"
-	"chat-server/sqs"
-	"chat-server/types"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"shared/redis"
+	"shared/sqs"
+	"shared/types"
 )
 
 func ClientEventHandler(client *types.Client, ctx context.Context, msg []byte, userId int64) {

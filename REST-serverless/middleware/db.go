@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"REST-serverless/db"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"shared/db"
 )
 
 func InitDBMiddleware() gin.HandlerFunc {

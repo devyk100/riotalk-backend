@@ -1,11 +1,11 @@
 package email
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/db"
+	"shared/utils"
 )
 
 type EmailLoginRequest struct {

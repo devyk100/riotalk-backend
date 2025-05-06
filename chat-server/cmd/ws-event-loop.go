@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"chat-server/redis"
-	"chat-server/types"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"shared/redis"
+	"shared/types"
 )
 
 func TopicEventHandlerCallback(Client *types.Client, val string, userId int64) error {

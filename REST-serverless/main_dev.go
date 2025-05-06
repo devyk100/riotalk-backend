@@ -1,14 +1,14 @@
 package main
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/redis"
 	"REST-serverless/routes"
 	"context"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"shared/db"
+	"shared/redis"
 	"time"
 )
 

@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"REST-serverless/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/utils"
 	"strings"
 )
 

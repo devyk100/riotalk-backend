@@ -1,14 +1,14 @@
 package main
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/redis"
 	"REST-serverless/routes"
 	"context"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/joho/godotenv"
 	"log"
+	"shared/db"
+	"shared/redis"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"

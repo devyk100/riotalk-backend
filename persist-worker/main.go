@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/joho/godotenv"
 	"log"
-	"persist-worker/db"
-	chatserversqs "persist-worker/sqs"
-	"persist-worker/types"
+	"shared/db"
+	chatserversqs "shared/sqs"
+	"shared/types"
 	"time"
 )
 

@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"chat-server/state"
-	"chat-server/types"
-	"chat-server/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"shared/types"
+	"shared/utils"
 )
 
 func HandleWSAuth(conn *websocket.Conn) (int64, error) {

@@ -1,11 +1,11 @@
 package users_route
 
 import (
-	"REST-serverless/db"
-	"REST-serverless/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"net/http"
+	"shared/db"
+	"shared/utils"
 )
 
 type CreateUserRequest struct {

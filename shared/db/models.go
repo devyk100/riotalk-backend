@@ -257,3 +257,9 @@ type UserToUserChatMapping struct {
 	TimeAt     int64
 	ReplyOf    pgtype.Int8
 }
+
+type UserToUserFriendMapping struct {
+	ID      int64
+	UserID1 int64
+	UserID2 int64
+}

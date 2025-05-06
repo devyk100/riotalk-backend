@@ -3,10 +3,10 @@ package auth_route
 import (
 	"REST-serverless/routes/auth/email"
 	"REST-serverless/routes/auth/google"
-	"REST-serverless/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"shared/utils"
 )
 
 func RefreshToken() gin.HandlerFunc {

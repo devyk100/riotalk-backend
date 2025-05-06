@@ -2,14 +2,14 @@ package main
 
 import (
 	"chat-server/cmd"
-	"chat-server/redis"
-	"chat-server/sqs"
-	"chat-server/types"
 	"context"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"net/http"
+	"shared/redis"
+	"shared/sqs"
+	"shared/types"
 	"sync"
 )
 

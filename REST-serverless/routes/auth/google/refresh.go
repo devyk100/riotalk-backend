@@ -1,7 +1,6 @@
 package google
 
 import (
-	"REST-serverless/utils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"shared/utils"
 )
 
 type RefreshTokenGoogleRequest struct {
