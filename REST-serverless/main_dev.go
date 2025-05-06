@@ -2,6 +2,7 @@ package main
 
 import (
 	"REST-serverless/db"
+	"REST-serverless/redis"
 	"REST-serverless/routes"
 	"context"
 	"fmt"
@@ -28,7 +29,8 @@ func Test() gin.HandlerFunc {
 	}
 }
 
-func main() {
+func main2() {
+
 	r := gin.Default()
 	r.Use(gin.Logger())
 	r.Use(cors.New(cors.Config{
@@ -42,6 +44,12 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Println("Error loading .env file", err.Error())
+	}
+
+	err = redis.InitRedisClient(context.Background())
+	if err != nil {
+		panic(err)
+		return
 	}
 
 	// all routes after this use DB, so initialisation is needed

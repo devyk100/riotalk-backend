@@ -74,8 +74,6 @@ WHERE c.allowed_roles = ANY(
         END
     );
 
-
-
 -- name: CreateServerInvite :one
 INSERT INTO invites(id, server_id, expiry, uses, valid)
 SELECT $1, $2, $3, $4, $6

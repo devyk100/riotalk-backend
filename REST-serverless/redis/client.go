@@ -9,7 +9,9 @@ import (
 	"os"
 )
 
-func RedisClient(ctx context.Context) (*redis.Client, error) {
+var RedisClient *redis.Client
+
+func InitRedisClient(ctx context.Context) error {
 	fmt.Println(os.Getenv("REDIS_PASSWORD"), os.Getenv("REDIS_URL"))
 	rdb := redis.NewClient(&redis.Options{
 		Addr:      os.Getenv("REDIS_URL"),
@@ -24,5 +26,6 @@ func RedisClient(ctx context.Context) (*redis.Client, error) {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 	fmt.Println("Connected to Redis:", pong)
-	return rdb, nil
+	RedisClient = rdb
+	return nil
 }

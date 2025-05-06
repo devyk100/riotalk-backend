@@ -103,7 +103,7 @@ func GoogleCallback() gin.HandlerFunc {
 		method := "google"
 		token := utils.CreateRefreshToken(method, googleTokenResponse.RefreshToken, userData.ID)
 		fmt.Println(token, "is the token, generated")
-		c.SetCookie("refresh_token", token, 60*60*24, "/", "", false, true)
+		c.SetCookie("refresh_token", token, 60*60*24*10, "/", "", false, true)
 		c.Redirect(http.StatusFound, "http://localhost:3000/auth-success")
 	}
 }

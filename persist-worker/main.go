@@ -15,6 +15,7 @@ import (
 
 var PERSIST_FREQUENCY = 1 * time.Second
 
+// IN PRODUCTION, TRY PERSISTING AGAIN, EVEN WHEN FAILED
 func PersistWorker() {
 	ctx := context.Background()
 	err := db.InitDb(ctx)

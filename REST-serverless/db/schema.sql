@@ -26,6 +26,14 @@ CREATE TABLE servers (
     banner TEXT
 );
 
+CREATE TABLE user_to_user_friend_mapping (
+    id BIGSERIAL PRIMARY KEY,
+    user_id_1 BIGINT NOT NULL,
+    user_id_2 BIGINT NOT NULL,
+    FOREIGN KEY (user_id_1) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id_2) REFERENCES users(id) ON DELETE CASCADE
+);
+
 DROP TYPE IF EXISTS message_type CASCADE;
 CREATE TYPE message_type AS ENUM ('image', 'video', 'document', 'text', 'link');
 
@@ -83,8 +91,8 @@ CREATE TABLE user_to_channel_chat_mapping (
     type message_type NOT NULL,
     time_at BIGINT NOT NULL,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (reply_of) REFERENCES user_to_channel_chat_mapping(id)
-        ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+--     FOREIGN KEY (reply_of) REFERENCES user_to_channel_chat_mapping(id)
+--         ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
 );
 -- CREATE INDEX idx_reply_of ON user_to_channel_chat_mapping(reply_of);

@@ -14,6 +14,7 @@ func GetChannelChats() gin.HandlerFunc {
 func ChannelRouter(router *gin.RouterGroup) *gin.RouterGroup {
 	channelRouter := router.Group("/channels")
 	channelRouter.GET("/list", middleware.AuthMiddleware(), ListAllChannels())
+	channelRouter.GET("/chats", middleware.AuthMiddleware(), ListChats())
 	channelRouter.POST("/create", middleware.AuthMiddleware(), CreateChannel())
 	channelRouter.PUT("/edit", middleware.AuthMiddleware(), EditChannel())
 	return channelRouter
