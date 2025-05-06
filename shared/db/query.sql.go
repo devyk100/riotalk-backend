@@ -414,6 +414,76 @@ func (q *Queries) DecrementInviteUses(ctx context.Context, id string) error {
 	return err
 }
 
+const getChannelChatsBefore = `-- name: GetChannelChatsBefore :many
+SELECT
+    chat.id, chat.content, chat.reply_of, chat.from_user_id, chat.channel_id, chat.type, chat.time_at,
+    u.name AS user_name,
+    u.username AS user_username,
+    u.img AS user_img,
+    ch.server_id
+FROM (
+         SELECT id, content, reply_of, from_user_id, channel_id, type, time_at
+         FROM user_to_channel_chat_mapping
+         WHERE channel_id = $1 AND time_at < $2
+         ORDER BY time_at DESC
+         LIMIT 25
+     ) chat
+         JOIN users u ON chat.from_user_id = u.id
+         JOIN channels ch ON chat.channel_id = ch.id
+ORDER BY chat.time_at ASC
+`
+
+type GetChannelChatsBeforeParams struct {
+	ChannelID int64
+	TimeAt    int64
+}
+
+type GetChannelChatsBeforeRow struct {
+	ID           int64
+	Content      pgtype.Text
+	ReplyOf      pgtype.Int8
+	FromUserID   int64
+	ChannelID    int64
+	Type         MessageType
+	TimeAt       int64
+	UserName     string
+	UserUsername string
+	UserImg      pgtype.Text
+	ServerID     int64
+}
+
+func (q *Queries) GetChannelChatsBefore(ctx context.Context, arg GetChannelChatsBeforeParams) ([]GetChannelChatsBeforeRow, error) {
+	rows, err := q.db.Query(ctx, getChannelChatsBefore, arg.ChannelID, arg.TimeAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetChannelChatsBeforeRow
+	for rows.Next() {
+		var i GetChannelChatsBeforeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Content,
+			&i.ReplyOf,
+			&i.FromUserID,
+			&i.ChannelID,
+			&i.Type,
+			&i.TimeAt,
+			&i.UserName,
+			&i.UserUsername,
+			&i.UserImg,
+			&i.ServerID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getChannelList = `-- name: GetChannelList :many
 WITH user_role_cte AS (
     SELECT role FROM server_to_user_mapping

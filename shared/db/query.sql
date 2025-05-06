@@ -133,10 +133,23 @@ WHERE target.user_id = $2
     (initiator.role = 'moderator' AND $3 IN ('moderator', 'member'))
     );
 
-
-
-
-
+-- name: GetChannelChatsBefore :many
+SELECT
+    chat.*,
+    u.name AS user_name,
+    u.username AS user_username,
+    u.img AS user_img,
+    ch.server_id
+FROM (
+         SELECT *
+         FROM user_to_channel_chat_mapping
+         WHERE channel_id = $1 AND time_at < $2
+         ORDER BY time_at DESC
+         LIMIT 25
+     ) chat
+         JOIN users u ON chat.from_user_id = u.id
+         JOIN channels ch ON chat.channel_id = ch.id
+ORDER BY chat.time_at;
 
 
 
